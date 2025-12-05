@@ -1,0 +1,153 @@
+.landing {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.landing-container {
+  max-width: 1000px;
+  width: 100%;
+}
+
+.landing-header {
+  text-align: center;
+  margin-bottom: 60px;
+  color: white;
+}
+
+.landing-header h1 {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.landing-subtitle {
+  font-size: 1.3rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.option-card {
+  background: white;
+  border: none;
+  border-radius: 15px;
+  padding: 40px 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.option-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.option-card:hover::before {
+  left: 100%;
+}
+
+.option-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.option-card:active {
+  transform: translateY(-5px);
+}
+
+.card-icon {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.option-card h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.option-card p {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.horarios-card {
+  border-top: 4px solid #ff6b6b;
+}
+
+.horarios-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.05),
+    rgba(255, 107, 107, 0.1)
+  );
+}
+
+.materias-card {
+  border-top: 4px solid #4ecdc4;
+}
+
+.materias-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(78, 205, 196, 0.05),
+    rgba(78, 205, 196, 0.1)
+  );
+}
+
+@media (max-width: 768px) {
+  .landing-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .landing-subtitle {
+    font-size: 1rem;
+  }
+
+  .options-grid {
+    gap: 20px;
+  }
+
+  .option-card {
+    padding: 30px 20px;
+  }
+
+  .card-icon {
+    font-size: 2.5rem;
+  }
+
+  .option-card h2 {
+    font-size: 1.3rem;
+  }
+
+  .option-card p {
+    font-size: 0.85rem;
+  }
+}
