@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Calendar, dayjsLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import dayjs from "dayjs";
 import "../styles/Horarios.css";
 
 const localizer = dayjsLocalizer(dayjs);
