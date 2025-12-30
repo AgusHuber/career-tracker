@@ -1,9 +1,10 @@
-// Component: SelectedSummary
+// Componente: SelectedSummary
 // Props:
-// - selectedIds: array of event IDs currently selected in the calendar
-// - schedules: array of all event objects (used to lookup event details)
-// - subjects: array of subject objects (used to resolve readable names)
-// - onRemove: callback to remove/unselect an event (receives an event id)
+// - selectedIds: array de IDs de eventos actualmente seleccionados en el calendario
+// - schedules: array de todos los objetos de eventos (utilizado para buscar detalles del evento)
+// - subjects: array de objetos de materias (utilizado para resolver nombres legibles)
+// - onRemove: callback para remover/deseleccionar un evento (recibe un ID de evento)
+
 export function SelectedSummary({
   selectedIds,
   schedules,

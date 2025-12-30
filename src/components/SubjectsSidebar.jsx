@@ -16,7 +16,6 @@ export function SubjectsSidebar({
   subjects,
   selectedSubject,
   onSelectSubject,
-  loading,
 }) {
   return (
     <aside className="subjects-selector">
@@ -27,7 +26,7 @@ export function SubjectsSidebar({
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          style={{ width: "100%", padding: "8px", borderRadius: "5px" }}
+          className="year-select"
         >
           {Object.entries(YEAR_CONFIG).map(([num, config]) => (
             <option key={num} value={num}>
@@ -41,12 +40,8 @@ export function SubjectsSidebar({
         Selecciona una materia para filtrar.
       </p>
 
-      {/* Lista de materias (o estado de carga) */}
-      {loading ? (
-        <p style={{ textAlign: "center", color: "#888" }}>
-          Cargando materias...
-        </p>
-      ) : (
+      {/* Lista de materias */}
+      {
         <div className="subjects-list">
           {subjects.map((materia) => (
             <button
@@ -65,7 +60,7 @@ export function SubjectsSidebar({
             </button>
           ))}
         </div>
-      )}
+      }
     </aside>
   );
 }
