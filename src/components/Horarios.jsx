@@ -1,215 +1,161 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Calendar, dayjsLocalizer, Views } from "react-big-calendar";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/Horarios.css";
 
+// Importamos nuestras piezas nuevas
+import { useHorariosData } from "../hooks/useHorariosData";
+import { SubjectsSidebar } from "./SubjectsSidebar";
+import { SelectedSummary } from "./SelectedSummary";
+import { SUBJECT_COLORS } from "../utils/constants";
+
+dayjs.locale("es");
 const localizer = dayjsLocalizer(dayjs);
 
+// Configuración visual del calendario
+const range = (date) => {
+  const start = dayjs(date).day(1);
+  return Array.from({ length: 6 }, (_, i) => start.add(i, "day").toDate());
+};
+
+const formats = { dayFormat: "dddd" };
+
 export function Horarios({ onBack }) {
+  // Componente: Horarios
+  // Descripción: Muestra un calendario semanal con los horarios cargados desde
+  // el hook `useHorariosData`. Proporciona una barra lateral con las materias
+  // y un resumen de selecciones.
+  // Props:
+  // - onBack: callback que vuelve a la pantalla anterior
+
+  // 1. Usamos el Hook para obtener datos
+  const { selectedYear, setSelectedYear, subjects, schedules, loading } =
+    useHorariosData();
+
+  // 2. Estado local de la interfaz (selecciones)
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [selectedSchedules, setSelectedSchedules] = useState([]);
-  const [view, setView] = useState(Views.WEEK);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // Datos de ejemplo de materias con horarios
-  const subjects = [
-    {
-      id: 1,
-      name: "Física I",
-      color: "#FF6B6B",
-      schedules: [
-        {
-          id: "sch1",
-          title: "Física I - Comisión A (1H10)",
-          start: new Date(2025, 11, 1, 14, 55),
-          end: new Date(2025, 11, 1, 17, 10),
-          classroom: "1H10",
-          status: "available",
-        },
-        {
-          id: "sch2",
-          title: "Física I - Comisión B (2K7)",
-          start: new Date(2025, 11, 3, 12, 0),
-          end: new Date(2025, 11, 3, 15, 50),
-          classroom: "2K7",
-          status: "available",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Análisis Matemático I",
-      color: "#4ECDC4",
-      schedules: [
-        {
-          id: "sch3",
-          title: "Análisis Matemático I (1H10)",
-          start: new Date(2025, 11, 3, 13, 15),
-          end: new Date(2025, 11, 3, 17, 0),
-          classroom: "1H10",
-          status: "available",
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Análisis Matemático II",
-      color: "#FFE66D",
-      schedules: [
-        {
-          id: "sch4",
-          title: "Análisis Matemático II (1H9)",
-          start: new Date(2025, 11, 4, 13, 15),
-          end: new Date(2025, 11, 4, 17, 0),
-          classroom: "1H9",
-          status: "available",
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: "Legislación",
-      color: "#95E1D3",
-      schedules: [
-        {
-          id: "sch5",
-          title: "Legislación (4K4)",
-          start: new Date(2025, 11, 3, 19, 55),
-          end: new Date(2025, 11, 3, 22, 55),
-          classroom: "4K4",
-          status: "available",
-        },
-      ],
-    },
-  ];
-
-  // Obtener eventos de la materia seleccionada
-  const calendarEvents = selectedSubject
-    ? selectedSubject.schedules.map((sch) => ({
-        ...sch,
-        isSelected: selectedSchedules.includes(sch.id),
-      }))
-    : [];
-
-  // Todos los eventos para visualizar los seleccionados
-  const allSelectedEvents = selectedSchedules.map((scheduleId) => {
-    for (let subject of subjects) {
-      const schedule = subject.schedules.find((s) => s.id === scheduleId);
-      if (schedule) {
-        return {
-          ...schedule,
-          isSelected: true,
-          resourceId: subject.id,
-        };
-      }
-    }
-    return null;
-  });
-
-  const handleSelectSchedule = (scheduleId) => {
-    setSelectedSchedules((prev) =>
-      prev.includes(scheduleId)
-        ? prev.filter((id) => id !== scheduleId)
-        : [...prev, scheduleId]
+  // Lógica de filtrado visual (Materia seleccionada OR Horarios guardados)
+  const displayedEvents = useMemo(() => {
+    if (!selectedSubject) return schedules;
+    return schedules.filter(
+      (event) =>
+        event.materia === selectedSubject || selectedIds.includes(event.id)
     );
+  }, [schedules, selectedSubject, selectedIds]);
+
+  // Alterna el filtro de materia: si ya está seleccionada, la quita
+  const handleSelectSubject = (id) => {
+    setSelectedSubject((prev) => (prev === id ? null : id));
   };
 
-  const handleSelectEvent = (event) => {
-    if (event.isSelected) {
-      handleSelectSchedule(event.id);
-    }
+  // Selecciona o deselecciona todos los eventos de una comisión
+  const toggleSchedule = (eventId) => {
+    const clickedEvent = schedules.find((e) => e.id === eventId);
+    if (!clickedEvent) return;
+
+    const { materia, comision } = clickedEvent;
+    // Obtener todos los eventos de esta materia y comisión
+    const groupIds = schedules
+      .filter((e) => e.materia === materia && e.comision === comision)
+      .map((e) => e.id);
+
+    const todosSeleccionados = groupIds.every((id) => selectedIds.includes(id));
+
+    setSelectedIds((prev) => {
+      // Si todos están seleccionados, los deselecciona
+      if (todosSeleccionados) {
+        return prev.filter((id) => !groupIds.includes(id));
+      }
+      // Si no, deselecciona otros de la misma materia y selecciona estos
+      const conOtraMateria = prev.filter((id) => {
+        const ev = schedules.find((s) => s.id === id);
+        return ev && ev.materia !== materia;
+      });
+      return [...conOtraMateria, ...groupIds];
+    });
+  };
+
+  // Estilos visuales: evento seleccionado = color brillante, no seleccionado = gris opaco
+  const getEventStyle = (event) => {
+    const isSelected = selectedIds.includes(event.id);
+    const color = SUBJECT_COLORS[event.materia] || "#999";
+
+    return {
+      style: {
+        backgroundColor: isSelected ? color : "#e0e0e0",
+        color: isSelected ? "white" : "#666",
+        border: `2px solid ${color}`,
+        borderRadius: 6,
+        opacity: isSelected ? 1 : 0.5,
+      },
+    };
   };
 
   return (
     <div className="horarios">
-      <div className="horarios-header">
+      <header className="horarios-header">
         <button className="back-button" onClick={onBack}>
           ← Volver
         </button>
-        <h1>Organizador de Horarios</h1>
-      </div>
+        <h1>Selecciona tus Horarios</h1>
+      </header>
 
       <div className="horarios-container">
-        {/* Selector de materias */}
-        <div className="subjects-selector">
-          <h3>Selecciona una materia:</h3>
-          <div className="subjects-list">
-            {subjects.map((subject) => (
-              <button
-                key={subject.id}
-                className={`subject-btn ${
-                  selectedSubject?.id === subject.id ? "active" : ""
-                }`}
-                onClick={() => setSelectedSubject(subject)}
-                style={{
-                  borderLeftColor: subject.color,
-                  backgroundColor:
-                    selectedSubject?.id === subject.id
-                      ? `${subject.color}20`
-                      : "transparent",
-                }}
-              >
-                {subject.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <SubjectsSidebar
+          year={selectedYear}
+          setYear={setSelectedYear}
+          subjects={subjects}
+          selectedSubject={selectedSubject}
+          onSelectSubject={handleSelectSubject}
+          loading={loading}
+        />
 
-        {/* Calendario */}
-        <div className="calendar-wrapper">
-          {selectedSubject && (
-            <div className="schedules-info">
-              <h3>Horarios disponibles - {selectedSubject.name}</h3>
-              <div className="schedule-chips">
-                {calendarEvents.map((schedule) => (
-                  <button
-                    key={schedule.id}
-                    className={`schedule-chip ${
-                      selectedSchedules.includes(schedule.id) ? "selected" : ""
-                    }`}
-                    onClick={() => handleSelectSchedule(schedule.id)}
-                    style={{
-                      borderColor: selectedSubject.color,
-                      backgroundColor: selectedSchedules.includes(schedule.id)
-                        ? selectedSubject.color
-                        : "transparent",
-                      color: selectedSchedules.includes(schedule.id)
-                        ? "white"
-                        : "#333",
-                    }}
-                  >
-                    {schedule.title} - {schedule.classroom}
-                  </button>
-                ))}
-              </div>
+        <main className="calendar-wrapper">
+          {loading ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              Cargando...
             </div>
-          )}
+          ) : (
+            <>
+              <Calendar
+                localizer={localizer}
+                events={displayedEvents}
+                startAccessor="start"
+                endAccessor="end"
+                defaultDate={dayjs().toDate()}
+                view={Views.WEEK}
+                views={[Views.WEEK]}
+                range={range}
+                formats={formats}
+                min={dayjs().hour(8).minute(0).toDate()}
+                max={dayjs().hour(23).minute(0).toDate()}
+                step={30}
+                timeslots={2}
+                onSelectEvent={(e) => toggleSchedule(e.id)}
+                eventPropGetter={getEventStyle}
+                style={{ height: "100%", minHeight: 600 }}
+              />
 
-          <Calendar
-            localizer={localizer}
-            events={calendarEvents.concat(allSelectedEvents)}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 600, marginTop: 20 }}
-            view={view}
-            onView={setView}
-            views={["week"]}
-            defaultDate={new Date(2025, 11, 1)}
-            step={30}
-            showMultiDayTimes
-            onSelectEvent={handleSelectEvent}
-            eventPropGetter={(event) => {
-              const style = {
-                backgroundColor: event.isSelected ? "#333" : "#ccc",
-                borderRadius: "4px",
-                opacity: event.isSelected ? 1 : 0.6,
-                color: "white",
-                border: "none",
-                display: "block",
-              };
-              return { style };
-            }}
-          />
-        </div>
+              <SelectedSummary
+                selectedIds={selectedIds}
+                schedules={schedules}
+                subjects={subjects}
+                onRemove={toggleSchedule}
+              />
+            </>
+          )}
+        </main>
       </div>
     </div>
   );
